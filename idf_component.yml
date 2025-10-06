@@ -1,0 +1,16 @@
+name: "beshell-mg"
+version: "1.0.0"
+description: "Mongoose networking library wrapper for BeShell"
+keywords:
+  - "JavaScript"
+  - "QuickJS"
+authors:
+  - "alee201@163.com"
+homepage: "https://beshell.become.cool"
+url: "https://beshell.become.cool"
+repository: "https://github.com/become-cool/beshell.git"
+license: "LGPL"
+dependencies:
+  "become-cool/beshell":
+    version: ">=1.0.0"
+
