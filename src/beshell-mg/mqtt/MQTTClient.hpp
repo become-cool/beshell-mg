@@ -1,7 +1,7 @@
 #pragma once
 
 #include <beshell/EventEmitter.hpp>
-#include "mongoose.h"
+#include "../../../dep/mongoose.h"
 
 namespace be::mg {
 

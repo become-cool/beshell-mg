@@ -1,13 +1,12 @@
 #pragma once
 
-// #include "BeShell.hpp"
 #include <beshell/NativeModule.hpp>
 #include "./http/HTTPServer.hpp"
 #include "./http/HTTPClient.hpp"
 #include "./http/HTTPRequest.hpp"
 #include "./http/HTTPResponse.hpp"
 #include "./mqtt/MQTTClient.hpp"
-#include "mongoose.h"
+#include "../../dep/mongoose.h"
 
 
 namespace be::mg {
