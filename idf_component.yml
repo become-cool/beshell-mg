@@ -1,5 +1,5 @@
 name: "beshell-mg"
-version: "1.0.0"
+version: "1.1.0"
 description: "Mongoose networking library wrapper for BeShell"
 keywords:
   - "JavaScript"

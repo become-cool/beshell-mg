@@ -12,6 +12,7 @@ namespace be::mg {
     std::vector<JSCFunctionListEntry> Client::methods = {
         JS_CFUNC_DEF("send", 0, Client::send),
         JS_CFUNC_DEF("close", 0, Client::close),
+        JS_CFUNC_DEF("disconnect", 0, Client::close),
         JS_CFUNC_DEF("isConnected", 0, Client::isConnected),
         JS_CFUNC_DEF("enableChunkEvent", 0, Client::enableChunkEvent),
         JS_CFUNC_DEF("setClientKey", 0, Client::setClientKey),
@@ -27,6 +28,8 @@ namespace be::mg {
         if(conn) {
             conn->fn_data = this ;
         }
+
+        _isConnected = conn->is_listening ;
     }
     
     HTTPClientHandler Client::handler = nullptr ;
@@ -97,6 +100,9 @@ namespace be::mg {
      */
     JSValue Client::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(Client,client)
+        if(!client->conn) {
+            JSTHROW("not connected")
+        }
         client->conn->is_closing = true ;
         return JS_UNDEFINED ;
     }

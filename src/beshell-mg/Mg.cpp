@@ -553,6 +553,10 @@ namespace be::mg {
             JS_FreeCString(ctx, url) ;
             return MQTTClient::connect(ctx, this_val, argc, argv) ;
         }
+        else if ( strncmp(url,"tcp://", 6)==0 ) {
+            JS_FreeCString(ctx, url) ;
+            return TCPClient::connect(ctx, this_val, argc, argv) ;
+        }
         
         JS_FreeCString(ctx, url) ;
         JSTHROW("url not support")

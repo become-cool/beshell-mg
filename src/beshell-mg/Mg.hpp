@@ -6,6 +6,7 @@
 #include "./http/HTTPRequest.hpp"
 #include "./http/HTTPResponse.hpp"
 #include "./mqtt/MQTTClient.hpp"
+#include "./tcp/TCPClient.hpp"
 #include "../../dep/mongoose.h"
 
 
@@ -56,6 +57,7 @@ namespace be::mg {
     friend class Server ;
     friend class Client ;
     friend class MQTTClient ;
+    friend class TCPClient ;
     } ;
 
     
