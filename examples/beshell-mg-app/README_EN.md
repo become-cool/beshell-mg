@@ -1,71 +1,237 @@
-[中文](./README.md)
+# BeShell-MG Example App
 
-## Preparation
+This is an example project demonstrating the usage of BeShell-MG (Mongoose networking library).
 
-#### Hardware
+## Features
 
-Prepare an ESP32 device; any ESP32 development board will work.
+This example project demonstrates the following features:
 
-#### Development Environment
+### Networking (MG Module)
 
-Building and flashing are done in the ESP-IDF environment. First, you need to install ESP-IDF.
+| Example File | Description |
+|---------|------|
+| `http-server.js` | Create HTTP Web server with routing |
+| `http-client.js` | Send HTTP GET/POST requests |
+| `http-download.js` | Download files with progress display |
+| `mqtt-client.js` | Connect to MQTT broker, subscribe and publish |
+| `websocket-server.js` | Create WebSocket server with bidirectional communication |
+| `tcp-client.js` | Raw TCP socket communication |
+| `sntp-time.js` | Network time synchronization, DNS cache operations |
 
-* Install [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.4.2/esp32/get-started/index.html) independently
-* **Recommended:** Use the [ESP-IDF Extension](vscode:extension/espressif.esp-idf-extension) in VSCode.
+### WiFi Features
 
-## Creating an Example Project
+| Example File | Description |
+|---------|------|
+| `wifi-sta.js` | Connect to WiFi hotspot (Station mode) |
+| `wifi-ap.js` | Create WiFi hotspot (AP mode) |
+| `wifi-scan.js` | Scan for nearby WiFi networks |
 
-Automatically create an example project from the ESP Component Registry in VSCode (requires the [ESP-IDF Extension](vscode:extension/espressif.esp-idf-extension)).
+### Basic Features
 
-1. Press `Ctrl+Shift+P`, enter the keyword `component`, and select `ESP-IDF: Show ESP Component Registry`
+| Example File | Description |
+|---------|------|
+| `gpio-blink.js` | GPIO control, LED blinking |
 
-	![](./doc/install-1.png "Press `Ctrl+Shift+P`, enter `component`, and select `ESP-IDF: Show ESP Component Registry`")
+## Project Structure
 
-2. Search for the component using the keyword `beshell`
+```
+beshell-mg-app/
+├── CMakeLists.txt          # Project CMake configuration
+├── sdkconfig.defaults      # Default SDK configuration
+├── README.md               # This file
+├── main/
+│   ├── main.cpp            # C++ entry file
+│   ├── CMakeLists.txt      # main component CMake config
+│   └── idf_component.yml   # Component dependencies
+├── img/
+│   ├── partitions-4MB.csv  # 4MB Flash partition table
+│   ├── partitions-8MB.csv  # 8MB Flash partition table
+│   └── partitions-16MB.csv # 16MB Flash partition table
+└── js/
+    ├── main.js             # JS entry file
+    └── example/            # Example scripts directory
+        ├── http-server.js
+        ├── http-client.js
+        ├── http-download.js
+        ├── mqtt-client.js
+        ├── websocket-server.js
+        ├── tcp-client.js
+        ├── sntp-time.js
+        ├── wifi-sta.js
+        ├── wifi-ap.js
+        ├── wifi-scan.js
+        └── gpio-blink.js
+```
 
-	![](./doc/install-2.png "Search for the component using `beshell`")
+## Hardware Requirements
 
-3. Click the example `beshell-app` to enter its page
+- ESP32 / ESP32-S3 / ESP32-C3 or other WiFi-capable chips
+- At least 4MB Flash
+- USB-to-Serial for flashing and debugging
 
-	![](./doc/install-3.png "Click to enter the example `beshell-app`")
+## Quick Start
 
-4. Click `Create project from this example` on the page
+### 1. Configure WiFi Credentials
 
-	![](./doc/install-4.png "Create project from this example")
+Edit `js/example/wifi-sta.js`, `js/example/http-server.js`, etc., to set your WiFi SSID and password:
 
-5. Browse to the local directory where you want to store the project, and the [ESP-IDF Extension](vscode:extension/espressif.esp-idf-extension) in VSCode will automatically download the project and open it in a new window.
+```javascript
+const ssid = "your SSID"
+const pwd = "your PASSWORD"
+```
 
-## Build and Flash
+### 2. Build the Project
 
-For the first build, simply run `idf.py build flash` to build and flash the entire project (with the device connected to your PC).
+```bash
+idf.py build
+```
 
-[BeShell](https://beshell.become.cool) supports allocating a separate partition on the device's flash to store JavaScript files, allowing you to execute and import these JS files just like on a PC.
+### 3. Flash the Firmware
 
-The project's CMakeLists.txt provides commands for packaging and flashing JS files:
+```bash
+idf.py flash
+```
 
-#### Packaging JS Scripts
+### 4. View Serial Output
 
-Use the command `idf.py pack-js` to package all files in the `js` directory, generating a flashable image file `img/js.bin`.
+```bash
+idf.py monitor
+```
 
-> * When you run `idf.py build` to build the entire project, the JS packaging command is also executed automatically
-> * The JS directory (`js`) and image file (`img/js.bin`) can be modified in CMakeLists.txt
-> * If the target file already exists and none of the source files in the directory have changed, the command will not re-execute
+### 5. Run Examples
 
-#### Flashing JS Scripts
+In the serial terminal, enter the following command to run an example:
 
-Use the command `idf.py flash-js` to flash the `img/js.bin` file to the JS partition on the device's flash.
+```
+run /example/http-server.js
+```
 
-The partition's start address can be modified in CMakeLists.txt. It should match the JS partition start address in partition.csv, and the size of `img/js.bin` must not exceed the JS partition.
+## Example Details
 
-> * When you run `idf.py flash` to flash the entire project, the JS partition flashing command is also executed automatically
+### HTTP Server
 
-## Running JavaScript Examples
+Create a simple HTTP Web server:
 
-The [BeShell](https://beshell.become.cool) firmware provides an interactive JS execution environment (`REPL`) that supports serial, websocket, Bluetooth, USB, and other forms. You can use any serial tool or the online console [BeConsole](https://beconsole.become.cool) to connect to an ESP32 device running BeShell firmware, then send commands or JS code to the firmware and receive program output and JS return values.
+```javascript
+import * as mg from "mg"
 
-On startup, the firmware automatically runs `/main.js` from the JS partition (the path of the auto-start JS file can be modified in main.cpp).
-Some JS examples are prepared in the `/example` directory. In a serial tool or [BeConsole](https://beconsole.become.cool), enter `run [path to JS file]`, e.g., `run /example/wifi-ap.js` to run the example. Enter `reboot` to return to the `/main.js` entry point.
+mg.listenHttp("0.0.0.0:8080", (event, req, rspn) => {
+    if (event === "http.msg") {
+        rspn.setStatus(200)
+        rspn.setHeader("Content-Type", "text/html")
+        rspn.send("<h1>Hello World</h1>")
+    }
+})
+```
 
-## Online File System Access
+### HTTP Client
 
-After connecting to the device with [BeConsole](https://beconsole.become.cool), you can list, access, and manage JS files on the device. It also integrates the VSCode editor core to support online editing and real-time execution of JS files on the device. You can also package all JS files on the device into a zip file for download.
+Send HTTP GET request:
+
+```javascript
+import * as mg from "mg"
+
+let body = await mg.get("http://api.example.com/data")
+console.log(body.toString())
+```
+
+### HTTP Download
+
+Download file with progress:
+
+```javascript
+import * as mg from "mg"
+
+// Download to memory
+await mg.download("http://example.com/file.bin", null, (total, current, chunk) => {
+    console.log(`Progress: ${(current/total*100).toFixed(1)}%`)
+})
+
+// Download to file
+await mg.download("http://example.com/file.bin", "/data/file.bin", (total, current) => {
+    console.log(`Downloaded: ${current}/${total} bytes`)
+})
+```
+
+### MQTT Client
+
+Connect to MQTT Broker:
+
+```javascript
+import * as mg from "mg"
+
+let client = mg.connect("mqtt://broker.emqx.io:1883", (event, data) => {
+    if (event === "mqtt.open") {
+        client.sub("test/topic")
+        client.push("test/topic", "Hello MQTT")
+    }
+    else if (event === "mqtt.msg") {
+        console.log("Received:", data.body().toString())
+    }
+})
+```
+
+### WebSocket Server
+
+Create WebSocket server:
+
+```javascript
+import * as mg from "mg"
+
+mg.listenHttp("0.0.0.0:8080", (event, req, rspn) => {
+    if (event === "ws.open") {
+        console.log("Client connected")
+    }
+    else if (event === "ws.msg") {
+        let msg = req.body().toString()
+        req.send("Echo: " + msg)
+    }
+})
+```
+
+### TCP Client
+
+Raw TCP socket communication:
+
+```javascript
+import * as mg from "mg"
+
+let conn = mg.connect("tcp://example.com:1234", (event, data) => {
+    if (event === "connect") {
+        conn.send("Hello TCP Server")
+    }
+    else if (event === "read") {
+        console.log("Received:", data.body().toString())
+    }
+})
+```
+
+### SNTP Time
+
+Synchronize network time:
+
+```javascript
+import * as mg from "mg"
+
+mg.sntpRequest("udp://pool.ntp.org:123", (err, timestamp) => {
+    if (!err) {
+        let date = new Date(timestamp)
+        console.log("Current time:", date.toISOString())
+    }
+})
+```
+
+## Dependencies
+
+- [beshell](https://github.com/become-cool/beshell) - BeShell core framework
+- [beshell-mg](https://github.com/become-cool/beshell) - Mongoose networking library wrapper
+
+## License
+
+LGPL
+
+## Links
+
+- [BeShell Documentation](https://beshell.become.cool)
+- [Mongoose Documentation](https://mongoose.ws/documentation/)
+- [ESP-IDF Documentation](https://docs.espressif.com/projects/esp-idf/)

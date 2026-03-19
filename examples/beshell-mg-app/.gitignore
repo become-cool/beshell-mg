@@ -1,8 +1,6 @@
 build/
+managed_components/
+js.bin
 sdkconfig
 sdkconfig.old
-dist
-.DS_Store
-CMakeLists.update_example.txt
-.cache
-.devcontainer
+CMakeLists.private.txt

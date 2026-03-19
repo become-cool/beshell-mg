@@ -14,15 +14,15 @@
 using namespace std ;
 
 namespace be::mg {
-    DEFINE_NCLASS_META(Server, NativeClass)
-    std::vector<JSCFunctionListEntry> Server::methods = {
-        JS_CFUNC_DEF("close", 0, Server::close),
-        JS_CFUNC_DEF("startTelweb", 0, Server::startTelweb),
-        JS_CFUNC_DEF("stopTelweb", 0, Server::stopTelweb),
-        JS_CFUNC_DEF("setHandler", 0, Server::setHandler),
+    DEFINE_NCLASS_META(HTTPServer, NativeClass)
+    std::vector<JSCFunctionListEntry> HTTPServer::methods = {
+        JS_CFUNC_DEF("close", 0, HTTPServer::close),
+        JS_CFUNC_DEF("startTelweb", 0, HTTPServer::startTelweb),
+        JS_CFUNC_DEF("stopTelweb", 0, HTTPServer::stopTelweb),
+        JS_CFUNC_DEF("setHandler", 0, HTTPServer::setHandler),
     } ;
     
-    Server::Server(JSContext * ctx, struct mg_connection * conn, JSValue callback)
+    HTTPServer::HTTPServer(JSContext * ctx, struct mg_connection * conn, JSValue callback)
         : NativeClass(ctx,build(ctx))
         , conn(conn)
         , callback(JS_DupValue(ctx,callback))
@@ -32,7 +32,7 @@ namespace be::mg {
         }
     }
 
-    Server::~Server() {
+    HTTPServer::~HTTPServer() {
         if(conn && conn->fn_data==nullptr) {
             conn->is_closing = true ;
             conn->fn_data = nullptr ;
@@ -43,11 +43,14 @@ namespace be::mg {
     /**
      * 关闭服务器
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPServer
      * @method close
      * @return undefined
      */
-    JSValue Server::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Server,server)
+    JSValue HTTPServer::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPServer,server)
         server->conn->is_closing = true ;
         JS_FreeValue(ctx,this_val) ;
         return JS_UNDEFINED ;
@@ -56,11 +59,14 @@ namespace be::mg {
     /**
      * 在该服务器对象上启动 telweb
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPServer
      * @method startTelweb
      * @return undefined
      */
-    JSValue Server::startTelweb(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Server,server)
+    JSValue HTTPServer::startTelweb(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPServer,server)
         server->telweb = true ;
         return JS_UNDEFINED ;
     }
@@ -68,11 +74,14 @@ namespace be::mg {
     /**
      * 在该服务器对象上停止 telweb
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPServer
      * @method stopTelweb
      * @return undefined
      */
-    JSValue Server::stopTelweb(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Server,server)
+    JSValue HTTPServer::stopTelweb(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPServer,server)
         server->telweb = false ;
         return JS_UNDEFINED ;
     }
@@ -83,21 +92,24 @@ namespace be::mg {
      * 回调函数的原型：
      * 
      * ```
-     * callback(event:string, request:HTTPRequest, response:Response): void
+     * callback(event:string, request:[HTTPRequest](HTTPRequest.html), response:[HTTPResponse](HTTPResponse.html)): void
      * ```
      * 
      * 其中 event 参数参考：[mg 事件](../mg/#%E4%BA%8B%E4%BB%B6)
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPServer
      * @method setHandler
      * @param callback:function 回调函数
      * @return undefined
      */
-    JSValue Server::setHandler(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPServer::setHandler(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(1)
         if( !JS_IsFunction(ctx, argv[0]) ){
             JSTHROW("arg callback must be a function")
         }
-        THIS_NCLASS(Server,server)
+        THIS_NCLASS(HTTPServer,server)
         server->callback = JS_DupValue(ctx,argv[0]) ;
         return JS_UNDEFINED ;
     }
@@ -125,7 +137,7 @@ namespace be::mg {
     //   MG_EV_USER,        // Starting ID for user events
     // };
 
-    void Server::eventHandler(struct mg_connection * conn, int ev, void *ev_data) {
+    void HTTPServer::eventHandler(struct mg_connection * conn, int ev, void *ev_data) {
 
         if(ev== MG_EV_POLL || !conn->fn_data) {
             return ;
@@ -154,9 +166,9 @@ namespace be::mg {
         //     }
         //     // c telweb 函数没有处理的请求, 由 js 函数接着处理
         //     // 这种情况下 open 事件是在 c 函数内处理的，
-        //     // 需要在此创建 Response 
+        //     // 需要在此创建 HTTPResponse 
         //     if(!conn->userdata){
-        //         conn->userdata = new Response(SERVER->ctx, conn) ;
+        //         conn->userdata = new HTTPResponse(SERVER->ctx, conn) ;
         //     }
         // }
 
@@ -179,12 +191,12 @@ namespace be::mg {
         else {
             switch(ev) {
                 case MG_EV_OPEN: {
-                    conn->userdata = new Response(SERVER->ctx, conn) ; 
+                    conn->userdata = new HTTPResponse(SERVER->ctx, conn) ; 
                     return ;
                 }
                 case MG_EV_CLOSE:
                     if(conn->userdata) {
-                        Response * rspn = (Response *)conn->userdata ;
+                        HTTPResponse * rspn = (HTTPResponse *)conn->userdata ;
 
                         JSValueConst * MALLOC_ARGV3(cbargv, JS_NewString(SERVER->ctx, "close"), JS_NULL, rspn->jsobj)
                         JSValue ret = JS_Call(SERVER->ctx, SERVER->callback, JS_UNDEFINED, 3, cbargv) ;
@@ -206,7 +218,7 @@ namespace be::mg {
                         printf("conn->userdata == NULL ??") ;
                         return ;
                     }
-                    Response * rspn = (Response *)conn->userdata ;
+                    HTTPResponse * rspn = (HTTPResponse *)conn->userdata ;
                     HTTPRequest * req = new HTTPRequest(SERVER->ctx,(struct mg_http_message *)ev_data);
 
                     MAKE_ARGV3(cbargv, JS_NewString(SERVER->ctx, Mg::eventName(ev)), req->jsobj, rspn->jsobj)
@@ -231,7 +243,7 @@ namespace be::mg {
                         printf("conn->userdata == NULL ??") ;
                         return ;
                     }
-                    Response * rspn = (Response *)conn->pfn_data ;
+                    HTTPResponse * rspn = (HTTPResponse *)conn->pfn_data ;
 
                     struct mg_ws_message * msg = (struct mg_ws_message *)ev_data ;
 
@@ -262,7 +274,7 @@ namespace be::mg {
     }
 
     
-    JSValue Server::listenHttp(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPServer::listenHttp(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         CHECK_WIFI_INITED
         ASSERT_ARGC(1)
 
@@ -307,7 +319,7 @@ namespace be::mg {
             JSTHROW("could not listen addr: %s", addr) ;
         }
 
-        Server * server = new Server(ctx, conn, callback) ;
+        HTTPServer * server = new HTTPServer(ctx, conn, callback) ;
         server->ssl = ssl ;
         server->telweb = telweb ;
 

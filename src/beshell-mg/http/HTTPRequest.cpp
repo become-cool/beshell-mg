@@ -1,14 +1,16 @@
 /**
- * HTTPRequest 类用于 mg.Server 回调函数的参数 req , 不需要创建该类: 
+ * HTTPRequest 类用于 mg.HTTPServer 回调函数的参数 req , 不需要创建该类: 
  * 
  * * [mg.listenHttp()](../mg/#%E5%87%BD%E6%95%B0-listenhttp)
  * 
  * * [mg.connect()](../mg/#%E5%87%BD%E6%95%B0-connect)
  * 
- * * [mg.Server.setHandler()](Server.html#%E6%96%B9%E6%B3%95-sethandler)
+ * * [mg.HTTPServer.setHandler()](HTTPServer.html#%E6%96%B9%E6%B3%95-sethandler)
  * 
  * 
  * 
+ * @module mg
+ * @component beshell-mg
  * @class HTTPRequest
  */
 #include "./HTTPRequest.hpp"
@@ -48,6 +50,9 @@ namespace be::mg {
      * 
      * "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT" 等
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method method
      * @return string
      */
@@ -59,6 +64,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的 uri
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method uri
      * @return string
      */
@@ -70,6 +78,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的 query 部分
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method query
      * @return string
      */
@@ -83,6 +94,9 @@ namespace be::mg {
      * 
      * "http", "https", "ws", "wss" 等
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method proto
      * @return string
      */
@@ -94,6 +108,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的 header 内容
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method header
      * @param name:string header的名称，如 "Content-Type", "Content-Length", "Host" 等
      * @return string
@@ -110,6 +127,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的所有 header 内容
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method allHeaders
      * @return object
      */
@@ -130,6 +150,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的 body 内容
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method body
      * @return ArrayBuffer
      */
@@ -141,6 +164,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的 body 数据长度
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method bodyLength
      * @return number
      */
@@ -154,6 +180,9 @@ namespace be::mg {
      * 
      * 所有数据接收完毕后，触发 `http.msg` 事件。
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method chunk
      * @return ArrayBuffer
      */
@@ -172,6 +201,9 @@ namespace be::mg {
      * 
      * > 参考 chunk() 方法
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method chunkLength
      * @return number
      */
@@ -188,6 +220,9 @@ namespace be::mg {
     /**
      * 返回 http 请求的原始数据内容
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method raw
      * @return string
      */
@@ -199,6 +234,9 @@ namespace be::mg {
     /**
      * 返回 http 请求原始的 header 内容
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method rawHead
      * @return string
      */
@@ -212,6 +250,9 @@ namespace be::mg {
      * 
      * 该函数是对 Mongoose mg_http_match_uri api 的封装
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method matchURI
      * @param pattern:string uri匹配模式
      * @return bool
@@ -237,6 +278,9 @@ namespace be::mg {
     /**
      * 检查是否是 Captive Portal 请求
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPRequest
      * @method isCaptivePortalRequest
      * @return bool
      */

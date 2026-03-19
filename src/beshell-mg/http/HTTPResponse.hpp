@@ -4,14 +4,14 @@
 #include "../../../dep/mongoose.h"
 
 namespace be::mg {
-    class Response: public ::be::NativeClass {
+    class HTTPResponse: public ::be::NativeClass {
         DECLARE_NCLASS_META
     private:
         static std::vector<JSCFunctionListEntry> methods ;
         struct mg_connection * conn = nullptr ;
 
     public:
-        Response(JSContext * ctx, struct mg_connection * conn) ;
+        HTTPResponse(JSContext * ctx, struct mg_connection * conn) ;
     
         static JSValue wsSend(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
         static JSValue httpUpgrade(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
@@ -21,4 +21,7 @@ namespace be::mg {
         static JSValue reply(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
 
     } ;
+    
+    // 为了保持向后兼容，保留 Response 作为 HTTPResponse 的别名
+    typedef HTTPResponse Response ;
 }

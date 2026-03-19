@@ -54,8 +54,8 @@ namespace be::mg {
         static void captivePortalHandler(struct mg_connection *c, int ev, void *ev_data, void *fn_data) ;
         static struct mg_connection * connCaptiveProtal ;
 
-    friend class Server ;
-    friend class Client ;
+    friend class HTTPServer ;
+    friend class HTTPClient ;
     friend class MQTTClient ;
     friend class TCPClient ;
     } ;

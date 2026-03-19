@@ -4,7 +4,7 @@
 #include "../../../dep/mongoose.h"
 
 namespace be::mg {
-    class Server: public ::be::NativeClass {
+    class HTTPServer: public ::be::NativeClass {
         DECLARE_NCLASS_META
     private:
         static std::vector<JSCFunctionListEntry> methods ;
@@ -22,8 +22,8 @@ namespace be::mg {
         static void eventHandler(struct mg_connection * conn, int ev, void *ev_data) ;
 
     public:
-        Server(JSContext * ctx, struct mg_connection * conn, JSValue callback=JS_NULL) ;
-        ~Server() ;
+        HTTPServer(JSContext * ctx, struct mg_connection * conn, JSValue callback=JS_NULL) ;
+        ~HTTPServer() ;
         
         static JSValue close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
         static JSValue startTelweb(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
@@ -32,4 +32,7 @@ namespace be::mg {
         
         static JSValue listenHttp(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
     } ;
+    
+    // 为了保持向后兼容，保留 Server 作为 HTTPServer 的别名
+    typedef HTTPServer Server ;
 } 

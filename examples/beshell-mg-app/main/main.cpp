@@ -20,6 +20,8 @@ void app_main(void)
     beshell.use<Serial>() ;
     beshell.use<NVS>() ;
     beshell.use<WiFi>() ;
+    
+    // 启用 BeShell-MG 模块 (Mongoose 网络库)
     beshell.use<Mg>() ;
 
     // 挂载 js 分区到文件的根目录

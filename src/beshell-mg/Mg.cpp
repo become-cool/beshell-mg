@@ -26,6 +26,7 @@
  * ```
  * 
  * @module mg
+ * @component beshell-mg
  */
 
 #include "Mg.hpp"
@@ -40,6 +41,7 @@ namespace be::mg {
     char const * const Mg::name = "mg" ;
 
     struct mg_mgr Mg::mgr ;
+    static bool g_mgr_inited = false ;
 
     char Mg::dns4[28] ;
 
@@ -84,7 +86,7 @@ namespace be::mg {
         exportClass<Server>() ;
         exportClass<Client>() ;
         exportClass<HTTPRequest>() ;
-        exportClass<Response>() ;
+        exportClass<HTTPResponse>() ;
         exportClass<MQTTClient>() ;
         exportClass<NativeClass>() ;
 
@@ -104,7 +106,7 @@ namespace be::mg {
         exportFunction("parseUrl",parseUrl,0) ;
         exportFunction("setLog",setLog,0) ;
 
-        exportFunction("listenHttp",Server::listenHttp,0) ;
+        exportFunction("listenHttp",HTTPServer::listenHttp,0) ;
         exportFunction("connect",connect,0) ;
         exportFunction("setCA",setCA,0) ;
         exportFunction("startCaptivePortal",startCaptivePortal,0) ;
@@ -132,6 +134,11 @@ namespace be::mg {
     }
 
     void Mg::use(be::BeShell * beshell) {
+
+        if(!g_mgr_inited) {
+            mg_mgr_init(&mgr) ;
+            g_mgr_inited = true ;
+        }
 
         strcpy(dns4,"udp://8.8.8.8:53") ;
         mgr.dns4.url = dns4 ;
@@ -253,7 +260,7 @@ namespace be::mg {
         ARGV_TO_CSTRING(0, url) ;
 
         // 连接到SNTP服务器（例如pool.ntp.org的UDP 123端口， "udp://pool.ntp.org:123"）
-        struct mg_connection *c = mg_sntp_connect(&mgr, url, (mg_event_handler_t)sntp_event_handler, &mgr);
+        struct mg_connection *c = mg_sntp_connect(&mgr, url, (mg_event_handler_t)sntp_event_handler, NULL);
         JS_FreeCString(ctx, url);
 
         if (c == NULL) {
@@ -293,16 +300,18 @@ namespace be::mg {
      * 回调函数的原型：
      * 
      * ```typescript
-     * callback(event:string, request:HTTPRequest, response:Response): void
+     * callback(event:string, request:[HTTPRequest](HTTPRequest.html), response:[HTTPResponse](HTTPResponse.html)): void
      * ```
      * 
      * 其中 event 参数参考：[mg 事件](#%E4%BA%8B%E4%BB%B6)
      * 
      * 
+     * @module mg
+     * @component beshell-mg
      * @function listenHttp
      * @param addrOrOptions:string|object 该参数可以是 [ip:port] 格式的字符串表示服务器地址，或选项对象
      * @param callback:function 服务器事件回调函数，该函数接收三个参数：事件名称、请求对象、响应对象
-     * @return [Server](Server.md)
+     * @return [HTTPServer](HTTPServer.html)
      */
 
 
@@ -314,21 +323,26 @@ namespace be::mg {
      * 回调函数的原型:
      * 
      * ```typescript
-     * callback(event:string, request:HTTPRequest): void
+     * callback(event:string, request:[HTTPRequest](HTTPRequest.html)): void
      * ```
      * 
      * 其中 event 参数参考：[mg 事件](#%E4%BA%8B%E4%BB%B6)
-     * 
+     *
+     * @component beshell-mg
+     *
+     * @module mg
      * @method connect
      * @param url:string 连接地址，例如 `"http://www.example.com/path"`
      * @param callback:function 事件回调函数
      * 
-     * @return [Client](Client.md)
+     * @return [HTTPClient](HTTPClient.html)
      */
 
     /**
      * 返回指定客户端连接的对端地址 [ip:port]
      * 
+     * @module mg
+     * @component beshell-mg
      * @function connPeer
      * @param idx:number 表示第几个客户端
      * @return string
@@ -355,6 +369,8 @@ namespace be::mg {
     /**
      * 连接到服务器的客户端数量
      * 
+     * @module mg
+     * @component beshell-mg
      * @function connCount
      * @return number
      */
@@ -369,6 +385,8 @@ namespace be::mg {
     /**
      * 返回当前 dns 服务器地址
      * 
+     * @module mg
+     * @component beshell-mg
      * @function getDNS
      * @return string
      */
@@ -384,6 +402,8 @@ namespace be::mg {
     /**
      * 设置 dns 服务器地址
      * 
+     * @module mg
+     * @component beshell-mg
      * @function setDNS
      * @param url:string  eg: 1.1.1.1:53
      */
@@ -404,6 +424,8 @@ namespace be::mg {
     /**
      * 返回当前 dns 请求超时时间设定，单位毫秒
      * 
+     * @module mg
+     * @component beshell-mg
      * @function getDNSTimeout
      * @return number
      */
@@ -414,6 +436,8 @@ namespace be::mg {
     /**
      * 设置 dns 请求超时时间，单位毫秒
      * 
+     * @module mg
+     * @component beshell-mg
      * @function setDNSTimeout
      * @param ms:number
      */
@@ -427,6 +451,8 @@ namespace be::mg {
     
     /**
      * 添加一条 DNS 缓存记录
+     * @module mg
+     * @component beshell-mg
      * @function addDNSCache
      * @param domain:string 域名
      * @param ip:string IP地址（如 "1.2.3.4"）
@@ -461,6 +487,8 @@ namespace be::mg {
 
     /**
      * 移除指定域名的 DNS 缓存
+     * @module mg
+     * @component beshell-mg
      * @function removeDNSCache
      * @param domain:string 域名
      * @return undefined
@@ -477,6 +505,8 @@ namespace be::mg {
 
     /**
      * 清空所有 DNS 缓存
+     * @module mg
+     * @component beshell-mg
      * @function clearDNSCache
      * @return undefined
      */
@@ -496,6 +526,8 @@ namespace be::mg {
      * }
      * ```
      * 
+     * @module mg
+     * @component beshell-mg
      * @function parseUrl
      * @param url:string 要解析的 URL 字符串
      * @return object
@@ -525,6 +557,8 @@ namespace be::mg {
      * * 3: debug
      * * 4: verbose
      * 
+     * @module mg
+     * @component beshell-mg
      * @function setLog
      * @param log:number
      * @return undefined
@@ -547,7 +581,7 @@ namespace be::mg {
         ARGV_TO_CSTRING_LEN_E(0, url, urlLen, "arg url must be a string")
         if ( strncmp(url,"http://", 7)==0 || strncmp(url,"https://", 8)==0 || strncmp(url,"ws://", 5)==0 || strncmp(url,"wss://", 6)==0 ) {
             JS_FreeCString(ctx, url) ;
-            return Client::connect(ctx, this_val, argc, argv) ;
+            return HTTPClient::connect(ctx, this_val, argc, argv) ;
         }
         else if ( strncmp(url,"mqtt://", 7)==0 || strncmp(url,"mqtts://", 8)==0 ) {
             JS_FreeCString(ctx, url) ;
@@ -567,6 +601,8 @@ namespace be::mg {
      * tls 需要较大 ram ，通常启用 WiFi 后剩余 ram 不足，此时会打印错误 `mg_error   4  setup err 0x7f00` 。
      * 可以尝试将 mbedtls 的内容放在 psram 中( CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y )
      * 
+     * @module mg
+     * @component beshell-mg
      * @function setCA
      * @param cert:ArrayBuffer TLS证书数据
      * @return undefined
@@ -652,3 +688,122 @@ namespace be::mg {
         return buf;
     }
 }
+
+
+// ============================================================================
+// 以下函数在 js/mg.js 中实现，通过 exportValue 导出到 mg 模块
+// ============================================================================
+
+/**
+ * 通用 HTTP 请求函数
+ * 
+ * 返回一个 Promise，用于执行 HTTP 请求。支持处理各种 HTTP 事件。
+ * 
+ * 示例：
+ * ```javascript
+ * import * as mg from 'mg'
+ * 
+ * await mg.request('http://example.com/api', (conn, event, data, timeTick) => {
+ *     if(event=='new') {
+ *         // 连接刚创建
+ *     }
+ *     else if(event=='connect') {
+ *         // 连接成功
+ *         conn.send('GET /api HTTP/1.0\r\nHost: example.com\r\n\r\n')
+ *     }
+ *     else if(event=='http.msg') {
+ *         // 收到完整响应
+ *         console.log(data.body())
+ *     }
+ * })
+ * ```
+ * 
+ * 事件类型：
+ * - `new`: 连接刚创建
+ * - `connect`: 连接成功
+ * - `http.msg`: 收到完整 HTTP 响应
+ * - `http.chunk`: 收到数据块（启用分块传输时）
+ * - `close`: 连接关闭
+ * - `error`: 发生错误
+ * - `timeout`: 请求超时
+ *
+ * @module mg
+ * @component beshell-mg
+ * @function request
+ * @param url:string 请求地址，例如 `"http://www.example.com/path"`
+ * @param handle:function 事件处理函数，接收参数 (conn, event, data, timeTick)
+ * @return Promise\<ArrayBuffer\> 返回包含响应体的 Promise
+ */
+
+/**
+ * 发送 HTTP GET 请求
+ * 
+ * 简化版的 HTTP 请求函数，自动发送 GET 请求并返回响应体。
+ * 
+ * 示例：
+ * ```javascript
+ * import * as mg from 'mg'
+ * 
+ * let body = await mg.get('http://example.com/data')
+ * console.log(body)
+ * ```
+ *
+ * @module mg
+ * @component beshell-mg
+ * @function get
+ * @param url:string 请求地址
+ * @param handle:function=null 可选的事件处理函数
+ * @return Promise\<ArrayBuffer\> 返回包含响应体的 Promise
+ */
+
+/**
+ * 下载文件
+ * 
+ * 支持分块下载大文件，并可选择保存到本地文件系统。
+ * 
+ * 示例：
+ * ```javascript
+ * import * as mg from 'mg'
+ * 
+ * // 下载到内存
+ * await mg.download('http://example.com/file.bin', null, (total, current, chunk) => {
+ *     console.log(`Progress: ${current}/${total}`)
+ * })
+ * 
+ * // 下载到文件
+ * await mg.download('http://example.com/file.bin', '/data/file.bin', (total, current) => {
+ *     console.log(`Downloaded: ${(current/total*100).toFixed(1)}%`)
+ * })
+ * ```
+ *
+ * @module mg
+ * @component beshell-mg
+ * @function download
+ * @param url:string 下载地址
+ * @param localPath:string=null 本地保存路径，为 null 时不保存到文件
+ * @param progress_cb:function=null 进度回调函数，接收参数 (total, current, chunk)
+ * @return Promise\<undefined\> 下载完成时 resolve
+ * @throws 连接意外断开时抛出错误
+ */
+
+/**
+ * 发送 HTTP POST 请求
+ * 
+ * 发送 POST 请求，请求体为 ArrayBuffer。
+ * 
+ * 示例：
+ * ```javascript
+ * import * as mg from 'mg'
+ * 
+ * let data = new Uint8Array([1, 2, 3, 4]).buffer
+ * let response = await mg.post('http://example.com/upload', data)
+ * console.log(response)
+ * ```
+ *
+ * @module mg
+ * @component beshell-mg
+ * @function post
+ * @param url:string 请求地址
+ * @param ab:ArrayBuffer 请求体数据
+ * @return Promise\<ArrayBuffer\> 返回包含响应体的 Promise
+ */

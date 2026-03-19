@@ -1,3 +1,38 @@
+/**
+ * MQTT 客户端类，用于连接 MQTT 代理并发布/订阅消息。
+ * 
+ * 通过 [mg.connect()](../mg/#%E5%87%BD%E6%95%B0-connect) 方法并传入 `mqtt://` 或 `mqtts://` 协议的 URL 来创建 MQTTClient 实例。
+ * 
+ * 示例：
+ * ```javascript
+ * import * as mg from 'mg'
+ * 
+ * let client = mg.connect('mqtt://broker.hivemq.com:1883', (ev, data) => {
+ *     if(ev=='mqtt.open') {
+ *         console.log('Connected to MQTT broker')
+ *         client.sub('test/topic')
+ *         client.push('test/topic', 'Hello MQTT')
+ *     }
+ *     else if(ev=='msg') {
+ *         console.log('Received message:', data.topic, data.data)
+ *     }
+ * })
+ * ```
+ * 
+ * 事件类型：
+ * - `open`: 连接已打开
+ * - `connect`: TCP 连接已建立
+ * - `mqtt.open`: MQTT 连接成功（收到 CONNACK）
+ * - `msg`: 收到 MQTT 消息，data 包含 topic, data, id, cmd, qos, ack 字段
+ * - `close`: 连接已关闭
+ * - `error`: 发生错误
+ * 
+ * @component beshell-mg
+ *
+ * @class MQTTClient
+ * @module mg
+ */
+
 #include "MQTTClient.hpp"
 #include "../Mg.hpp"
 #include "mongoose.h"
@@ -184,6 +219,34 @@ namespace be::mg {
             JS_FreeValue(ctx, jsvar) ;                                  \
         }
 
+    /**
+     * 连接到 MQTT 代理
+     * 
+     * 通常通过 [mg.connect()](../mg/#%E5%87%BD%E6%95%B0-connect) 调用，传入 `mqtt://` 或 `mqtts://` 协议的 URL。
+     * 
+     * 选项对象：
+     * ```typescript
+     * {
+     *     user: string,           // 用户名
+     *     pass: string,           // 密码
+     *     client_id: string,      // 客户端 ID
+     *     will_topic: string,     // 遗嘱主题
+     *     will_message: string,   // 遗嘱消息
+     *     will_retain: boolean,   // 遗嘱是否保留
+     *     clean: boolean=true,    // 是否清除会话
+     *     qos: number=0,          // QoS 等级 (0, 1, 2)
+     *     keepalive: number=0     // 保活时间（秒）
+     * }
+     * ```
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method connect
+     * @param url:string MQTT 代理地址，例如 `"mqtt://broker.hivemq.com:1883"`
+     * @param opts:object=null 连接选项对象
+     * @return [MQTTClient](MQTTClient.html) 返回 MQTTClient 实例
+     */
     JSValue MQTTClient::connect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         
         ASSERT_ARGC(1)
@@ -241,6 +304,21 @@ namespace be::mg {
         return client->jsobj ;
     }
 
+    /**
+     * 发布 MQTT 消息
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method push
+     * @param topic:string 消息主题
+     * @param payload:string|ArrayBuffer 消息内容
+     * @param qos:number=1 QoS 等级 (0, 1, 2)
+     * @param retain:boolean=false 是否保留消息
+     * @return undefined
+     * @throws MQTT 客户端未连接
+     * @throws payload 必须是字符串或 ArrayBuffer
+     */
     JSValue MQTTClient::push(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {    
         CHECK_ARGC(2)
         THIS_NCLASS(MQTTClient, that)
@@ -293,6 +371,18 @@ namespace be::mg {
         return JS_UNDEFINED;
     }
 
+    /**
+     * 订阅 MQTT 主题
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method sub
+     * @param topic:string 要订阅的主题
+     * @param qos:number=1 QoS 等级 (0, 1, 2)
+     * @return undefined
+     * @throws MQTT 客户端未连接
+     */
     JSValue MQTTClient::sub(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         CHECK_ARGC(1)
         THIS_NCLASS(MQTTClient, that)
@@ -312,6 +402,16 @@ namespace be::mg {
         return JS_UNDEFINED ;
     }
 
+    /**
+     * 取消订阅 MQTT 主题
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method unsub
+     * @param topic:string 要取消订阅的主题
+     * @return undefined
+     */
     JSValue MQTTClient::unsub(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         
     // static uint16_t s_id;
@@ -326,6 +426,16 @@ namespace be::mg {
         return JS_UNDEFINED ;
     }
 
+    /**
+     * 发送 MQTT Ping 请求
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method ping
+     * @return undefined
+     * @throws MQTT 客户端未连接
+     */
     JSValue MQTTClient::ping(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(MQTTClient, that)
         if(!that->conn){
@@ -334,6 +444,16 @@ namespace be::mg {
         mg_mqtt_ping(that->conn) ;
         return JS_UNDEFINED ;
     }
+    /**
+     * 断开 MQTT 连接
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method disconnect
+     * @return undefined
+     * @throws MQTT 客户端未连接
+     */
     JSValue MQTTClient::disconnect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(MQTTClient, that)
         if(!that->conn){
@@ -346,6 +466,17 @@ namespace be::mg {
     void MQTTClient::setHandler(MQTTClientHandler _handler) {
         handler = _handler ;
     }
+    /**
+     * 设置客户端证书和私钥（用于双向 TLS 认证）
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method setClientKey
+     * @param key:string 客户端私钥（PEM 格式）
+     * @param cert:string 客户端证书（PEM 格式）
+     * @return undefined
+     */
     JSValue MQTTClient::setClientKey(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(MQTTClient, that)
         CHECK_ARGC(2)
@@ -353,11 +484,29 @@ namespace be::mg {
         ARGV_TO_STRING(1, that->clientCert)
         return JS_UNDEFINED ;
     }
+    /**
+     * 启用双向 TLS 认证
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method enableClientAuth
+     * @return undefined
+     */
     JSValue MQTTClient::enableClientAuth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(MQTTClient, that)
         that->useClientCert = true ;
         return JS_UNDEFINED ;
     }
+    /**
+     * 禁用双向 TLS 认证
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class MQTTClient
+     * @method disableClientAuth
+     * @return undefined
+     */
     JSValue MQTTClient::disableClientAuth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(MQTTClient, that)
         that->useClientCert = false ;

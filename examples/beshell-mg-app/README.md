@@ -1,76 +1,237 @@
+# BeShell-MG Example App
 
-[English](./README_EN.md)
+这是一个演示 BeShell-MG (Mongoose 网络库) 用法的示例工程。
 
+## 功能特性
 
-## 准备
+本示例工程演示了以下功能：
 
-#### 硬件
+### 网络功能 (MG Module)
 
-准备一个 ESP32 设备，任意 ESP32 开发板即可。
+| 示例文件 | 说明 |
+|---------|------|
+| `http-server.js` | 创建 HTTP Web 服务器，支持路由处理 |
+| `http-client.js` | 发送 HTTP GET/POST 请求 |
+| `http-download.js` | 下载文件，支持进度显示 |
+| `mqtt-client.js` | 连接 MQTT Broker，订阅和发布消息 |
+| `websocket-server.js` | 创建 WebSocket 服务器，支持双向通信 |
+| `tcp-client.js` | 原始 TCP 套接字通信 |
+| `sntp-time.js` | 网络时间同步，DNS 缓存操作 |
 
-#### 开发环境
+### WiFi 功能
 
-构建和烧录都在 ESP-IDF 环境下进行，首先你需要安装 ESP-IDF 。
+| 示例文件 | 说明 |
+|---------|------|
+| `wifi-sta.js` | 连接到 WiFi 热点 (Station 模式) |
+| `wifi-ap.js` | 创建 WiFi 热点 (AP 模式) |
+| `wifi-scan.js` | 扫描周围的 WiFi 网络 |
 
-* 独立安装 [ESP-IDF](https://docs.espressif.com/projects/esp-idf/zh_CN/v5.4.2/esp32/get-started/index.html) 
-* **推荐** 在 VSCode 中使用 [ESP-IDF 扩展](vscode:extension/espressif.esp-idf-extension) 。
+### 基础功能
 
+| 示例文件 | 说明 |
+|---------|------|
+| `gpio-blink.js` | GPIO 控制，LED 闪烁 |
 
-## 创建示例工程
+## 项目结构
 
-在 VSCode 中从 ESP Component Registry 自动创建示例工程（需要 [ESP-IDF 扩展](vscode:extension/espressif.esp-idf-extension)）。
+```
+beshell-mg-app/
+├── CMakeLists.txt          # 项目 CMake 配置
+├── sdkconfig.defaults      # 默认 SDK 配置
+├── README.md               # 本文件
+├── main/
+│   ├── main.cpp            # C++ 入口文件
+│   ├── CMakeLists.txt      # main 组件 CMake 配置
+│   └── idf_component.yml   # 组件依赖配置
+├── img/
+│   ├── partitions-4MB.csv  # 4MB Flash 分区表
+│   ├── partitions-8MB.csv  # 8MB Flash 分区表
+│   └── partitions-16MB.csv # 16MB Flash 分区表
+└── js/
+    ├── main.js             # JS 入口文件
+    └── example/            # 示例脚本目录
+        ├── http-server.js
+        ├── http-client.js
+        ├── http-download.js
+        ├── mqtt-client.js
+        ├── websocket-server.js
+        ├── tcp-client.js
+        ├── sntp-time.js
+        ├── wifi-sta.js
+        ├── wifi-ap.js
+        ├── wifi-scan.js
+        └── gpio-blink.js
+```
 
+## 硬件要求
 
-1. 快捷键 `Ctrl+Shift+P` ，输入关键词 `component`，选择 `ESP-IDF: Show ESP Comonent Registry` 
+- ESP32 / ESP32-S3 / ESP32-C3 等支持 WiFi 的芯片
+- 至少 4MB Flash
+- USB 转串口用于烧录和调试
 
-2. 用关键词 `beshell-mg` 搜索 component 
+## 快速开始
 
-3. 点击例子 `beshell-mg-app` 进入页面
+### 1. 配置 WiFi 凭证
 
-4. 点击页面上的 `Create project from this example`
+编辑 `js/example/wifi-sta.js`、`js/example/http-server.js` 等文件，修改 WiFi SSID 和密码：
 
-5. 浏览存放工程的本地目录，然后 VScode 的 [ESP-IDF 扩展](vscode:extension/espressif.esp-idf-extension) 会自动下载工程并在新窗口打开。
+```javascript
+const ssid = "your SSID"
+const pwd = "your PASSWORD"
+```
 
+### 2. 构建项目
 
-## 构建和烧录
+```bash
+idf.py build
+```
 
+### 3. 烧录固件
 
-首次构建项目时，只需执行 `idf.py build flash`，即可完成整个项目的构建和烧录（设备已连接至PC）。
+```bash
+idf.py flash
+```
 
-[BeShell](https://beshell.become.cool) 支持在设备的 flash 上分配一个独立的分区，用来存放 JavsScript 文件，可以像在 PC 上一样执行、import 这些 JS 文件。
+### 4. 查看串口输出
 
-工程的 CMakeLists.txt 提供了用于打包和烧录 JS 文件的命令:
+```bash
+idf.py monitor
+```
 
-#### 打包JS脚本
+### 5. 运行示例
 
+在串口终端中，输入以下命令运行示例：
 
-用 `idf.py pack-js` 命令打包 `js` 目录内的所有文件，生成一个用于烧录的镜像文件 `img/js.bin`。
+```
+run /example/http-server.js
+```
 
-> * 执行 `idf.py build` 构建整个项目时，也会自动执行该 js 打包命令
-> * js 目录(`js`) 和 镜像文件(`img/js.bin`) 可以在 CMakeLists.txt 中修改
-> * 若目标文件已经存在，且源文件目录下的所有文件都没有变动，该命令不会重复执行
+## 示例详解
 
+### HTTP Server
 
+创建一个简单的 HTTP Web 服务器：
 
-#### 烧录 JS 脚本
+```javascript
+import * as mg from "mg"
 
-用 `idf.py flash-js` 命令将 `img/js.bin` 文件烧录到设备 flash 上的 js 分区。
+mg.listenHttp("0.0.0.0:8080", (event, req, rspn) => {
+    if (event === "http.msg") {
+        rspn.setStatus(200)
+        rspn.setHeader("Content-Type", "text/html")
+        rspn.send("<h1>Hello World</h1>")
+    }
+})
+```
 
-分区的起始地址可以在 CMakeLists.txt 中修改，应该和 partition.cvs 中的 js 分区起始位置一致，且 `img/js.bin` 文件大小不能超过 js 分区。
+### HTTP Client
 
-> * 执行 `idf.py flash` 烧录整个项目时，也会自动执行该 js 分区烧录命令 。
+发送 HTTP GET 请求：
 
+```javascript
+import * as mg from "mg"
 
+let body = await mg.get("http://api.example.com/data")
+console.log(body.toString())
+```
 
-## 运行 JavaScript 例子
+### HTTP Download
 
-[BeShell](https://beshell.become.cool) 的固件提供了一个交互式执行 js 的环境 `REPL`，支持串口、websocket、bt、usb 等形式。可以用任意串口工具，或在线控制台 [BeConsole](https://beconsole.become.cools://beconsole.become.cool) 连接运行 [BeShell](https://beshell.become.cool) 固件的 esp32 设备，然后向固件发送命令或 JS 代码，接收程序输出和 JS 代码的返回值。
+下载文件并显示进度：
 
-固件在启动时会自动运行 js 分区中的 `/main.js`（开机自启的 js 文件路径可以在 main.cpp 中修改)。
-`/example` 目录下准备了一些 js 的例子，在串口工具或 [BeConsole](https://beconsole.become.cools://beconsole.become.cool) 里输入 `run [js文件的路径]` 例如 `run /example/wifi-ap.js` 就可以运行这个例子。输入 `reboot` 回到 `/main.js` 入口。
+```javascript
+import * as mg from "mg"
 
+// Download to memory
+await mg.download("http://example.com/file.bin", null, (total, current, chunk) => {
+    console.log(`Progress: ${(current/total*100).toFixed(1)}%`)
+})
 
-## 在线访问文件系统
+// Download to file
+await mg.download("http://example.com/file.bin", "/data/file.bin", (total, current) => {
+    console.log(`Downloaded: ${current}/${total} bytes`)
+})
+```
 
-[BeConsole](https://beconsole.become.cools://beconsole.become.cool) 连接上设备后，可以列出、访问、维护设备上的 JS 文件，还集成了 VSCode 编辑器内核支持在线编辑、实时运行设备上的 JS 文件。还可以将设备上的 JS 文件整个打包成 zip 文件下载。
+### MQTT Client
 
+连接 MQTT Broker：
+
+```javascript
+import * as mg from "mg"
+
+let client = mg.connect("mqtt://broker.emqx.io:1883", (event, data) => {
+    if (event === "mqtt.open") {
+        client.sub("test/topic")
+        client.push("test/topic", "Hello MQTT")
+    }
+    else if (event === "mqtt.msg") {
+        console.log("Received:", data.body().toString())
+    }
+})
+```
+
+### WebSocket Server
+
+创建 WebSocket 服务器：
+
+```javascript
+import * as mg from "mg"
+
+mg.listenHttp("0.0.0.0:8080", (event, req, rspn) => {
+    if (event === "ws.open") {
+        console.log("Client connected")
+    }
+    else if (event === "ws.msg") {
+        let msg = req.body().toString()
+        req.send("Echo: " + msg)
+    }
+})
+```
+
+### TCP Client
+
+原始 TCP 套接字通信：
+
+```javascript
+import * as mg from "mg"
+
+let conn = mg.connect("tcp://example.com:1234", (event, data) => {
+    if (event === "connect") {
+        conn.send("Hello TCP Server")
+    }
+    else if (event === "read") {
+        console.log("Received:", data.body().toString())
+    }
+})
+```
+
+### SNTP Time
+
+同步网络时间：
+
+```javascript
+import * as mg from "mg"
+
+mg.sntpRequest("udp://pool.ntp.org:123", (err, timestamp) => {
+    if (!err) {
+        let date = new Date(timestamp)
+        console.log("Current time:", date.toISOString())
+    }
+})
+```
+
+## 依赖组件
+
+- [beshell](https://github.com/become-cool/beshell) - BeShell 核心框架
+- [beshell-mg](https://github.com/become-cool/beshell) - Mongoose 网络库封装
+
+## 许可证
+
+LGPL
+
+## 相关链接
+
+- [BeShell 文档](https://beshell.become.cool)
+- [Mongoose 文档](https://mongoose.ws/documentation/)
+- [ESP-IDF 文档](https://docs.espressif.com/projects/esp-idf/)

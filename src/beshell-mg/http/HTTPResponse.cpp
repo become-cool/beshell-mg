@@ -1,13 +1,15 @@
 /**
- * Response 类用于 mg.Server 回调函数的参数 rspn , 不需要创建该类: 
+ * HTTPResponse 类用于 mg.HTTPServer 回调函数的参数 rspn , 不需要创建该类: 
  * 
  * * [mg.listenHttp()](../mg/#%E5%87%BD%E6%95%B0-listenhttp)
  * 
- * * [mg.Server.setHandler()](Server.html#%E6%96%B9%E6%B3%95-sethandler)
+ * * [mg.HTTPServer.setHandler](HTTPServer.html#%E6%96%B9%E6%B3%95-sethandler)
  * 
  * 
  * 
- * @class Response
+ * @module mg
+ * @component beshell-mg
+ * @class HTTPResponse
  */
 
 #include "./HTTPResponse.hpp"
@@ -31,17 +33,17 @@ using namespace std ;
 
 
 namespace be::mg {
-    DEFINE_NCLASS_META(Response, NativeClass)
-    std::vector<JSCFunctionListEntry> Response::methods = {
-        JS_CFUNC_DEF("wsSend", 0, Response::wsSend),
-        JS_CFUNC_DEF("httpUpgrade", 0, Response::httpUpgrade),
-        JS_CFUNC_DEF("serveDir", 0, Response::serveDir),
-        JS_CFUNC_DEF("close", 0, Response::close),
-        JS_CFUNC_DEF("redirect", 0, Response::redirect),
-        JS_CFUNC_DEF("reply", 0, Response::reply),
+    DEFINE_NCLASS_META(HTTPResponse, NativeClass)
+    std::vector<JSCFunctionListEntry> HTTPResponse::methods = {
+        JS_CFUNC_DEF("wsSend", 0, HTTPResponse::wsSend),
+        JS_CFUNC_DEF("httpUpgrade", 0, HTTPResponse::httpUpgrade),
+        JS_CFUNC_DEF("serveDir", 0, HTTPResponse::serveDir),
+        JS_CFUNC_DEF("close", 0, HTTPResponse::close),
+        JS_CFUNC_DEF("redirect", 0, HTTPResponse::redirect),
+        JS_CFUNC_DEF("reply", 0, HTTPResponse::reply),
     } ;
 
-    Response::Response(JSContext * ctx, struct mg_connection * conn)
+    HTTPResponse::HTTPResponse(JSContext * ctx, struct mg_connection * conn)
         : NativeClass(ctx,build(ctx))
         , conn(conn)
     {}
@@ -49,15 +51,18 @@ namespace be::mg {
     /**
      * 回复内容
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPResponse
      * @method reply
      * @param content:string 回复内容
      * @param code:number=200 回复状态码, 默认为 200
      * @param header:string=null 回复头, 格式为 "key: value\r\n"
      * @return undefined
      */
-    JSValue Response::reply(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPResponse::reply(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(1)
-        THIS_NCLASS(Response, rspn)
+        THIS_NCLASS(HTTPResponse, rspn)
         NOT_WS_FUNC("mg.HTTPResponse.reply")
         
         int32_t code = 200 ;
@@ -94,13 +99,16 @@ namespace be::mg {
     /**
      * 重定向请求
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPResponse
      * @method redirect
      * @param url:string 重定向链接地址
      * @return undefined
      */
-    JSValue Response::redirect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPResponse::redirect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(1)
-        THIS_NCLASS(Response, rspn)
+        THIS_NCLASS(HTTPResponse, rspn)
         const char * url = JS_ToCString(ctx, argv[0]) ;
         
         char * header = mallocf("Location: %s\r\n", (char*)url) ;
@@ -118,11 +126,14 @@ namespace be::mg {
     /**
      * 服务器主动关闭访问连接
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPResponse
      * @method close
      * @return undefined
      */
-    JSValue Response::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Response, rspn)
+    JSValue HTTPResponse::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPResponse, rspn)
         rspn->conn->is_closing = 1 ;
         return JS_UNDEFINED ;
     }
@@ -133,14 +144,17 @@ namespace be::mg {
      * 
      * 该方法用于实现静态文件服务器，用法请参考：[简单 HTTP Web 后端的例子](../../guide/http-server.html#_2-%E7%AE%80%E5%8D%95-http-web-%E5%90%8E%E7%AB%AF%E7%9A%84%E4%BE%8B%E5%AD%90)
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPResponse
      * @method serveDir
      * @param req:[HTTPRequest](HTTPRequest.md) 请求对象，将事件回调函数传入的 req 直接传递给 serveDir 即可
      * @param dir:string 文件根目录
      * @return undefined
      */
-    JSValue Response::serveDir(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPResponse::serveDir(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(2)
-        THIS_NCLASS(Response, rspn)
+        THIS_NCLASS(HTTPResponse, rspn)
         NOT_WS_FUNC("mg.HTTPResponse.replay")
 
         JSVALUE_TO_NCLASS(HTTPRequest,argv[0],req)
@@ -161,12 +175,15 @@ namespace be::mg {
      * 
      * 将 http 请求升级为 WebSocket 通讯，用法请参考：[WebSocket 的例子](../../guide/http-server.html#_3-websocket-%E7%9A%84%E4%BE%8B%E5%AD%90)
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPResponse
      * @method httpUpgrade
      * @param req:[HTTPRequest](HTTPRequest.md) 请求对象，将事件回调函数传入的 req 直接传递给 serveDir 即可
      * @return undefined
      */
-    JSValue Response::httpUpgrade(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Response, rspn)
+    JSValue HTTPResponse::httpUpgrade(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPResponse, rspn)
         ASSERT_ARGC(1)
         NOT_WS_FUNC("mg.HTTPResponse.upgrade")
         JSVALUE_TO_NCLASS(HTTPRequest,argv[0],req)
@@ -184,13 +201,16 @@ namespace be::mg {
      * 
      * 用法请参考：[WebSocket 的例子](../../guide/http-server.html#_3-websocket-%E7%9A%84%E4%BE%8B%E5%AD%90)
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPResponse
      * @method wsSend
      * @param data:string 数据帧内容
      * @return undefined
      */
-    JSValue Response::wsSend(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPResponse::wsSend(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(1)
-        THIS_NCLASS(Response, rspn)
+        THIS_NCLASS(HTTPResponse, rspn)
         MUST_BE_WS_FUNC("mg.HTTPResponse.wsSend")
 
         if( JS_IsString(argv[0]) ){

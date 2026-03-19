@@ -5,11 +5,11 @@
 
 namespace be::mg {
     
-    class Client ;
+    class HTTPClient ;
     
-    typedef bool (*HTTPClientHandler) (Client * client, struct mg_connection *, int ev, void *ev_data, void *fn_data) ;
+    typedef bool (*HTTPClientHandler) (HTTPClient * client, struct mg_connection *, int ev, void *ev_data, void *fn_data) ;
 
-    class Client: public be::EventEmitter {
+    class HTTPClient: public be::EventEmitter {
         DECLARE_NCLASS_META
     private:
         static std::vector<JSCFunctionListEntry> methods ;
@@ -34,8 +34,8 @@ namespace be::mg {
     
         static HTTPClientHandler handler ;
     public:
-        Client(JSContext * ctx, struct mg_connection *, JSValue callback) ;
-        ~Client() ;
+        HTTPClient(JSContext * ctx, struct mg_connection *, JSValue callback) ;
+        ~HTTPClient() ;
         void setConn(struct mg_connection * conn) ;
         
         static JSValue send(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) ;
@@ -57,4 +57,7 @@ namespace be::mg {
         std::string host() const ;
     
     } ;
+    
+    // 为了保持向后兼容，保留 Client 作为 HTTPClient 的别名
+    typedef HTTPClient Client ;
 }

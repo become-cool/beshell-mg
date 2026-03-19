@@ -8,19 +8,19 @@ using namespace std ;
 
 
 namespace be::mg {
-    DEFINE_NCLASS_META(Client, EventEmitter)
-    std::vector<JSCFunctionListEntry> Client::methods = {
-        JS_CFUNC_DEF("send", 0, Client::send),
-        JS_CFUNC_DEF("close", 0, Client::close),
-        JS_CFUNC_DEF("disconnect", 0, Client::close),
-        JS_CFUNC_DEF("isConnected", 0, Client::isConnected),
-        JS_CFUNC_DEF("enableChunkEvent", 0, Client::enableChunkEvent),
-        JS_CFUNC_DEF("setClientKey", 0, Client::setClientKey),
-        JS_CFUNC_DEF("enableClientAuth", 0, Client::enableClientAuth),
-        JS_CFUNC_DEF("disableClientAuth", 0, Client::disableClientAuth),
+    DEFINE_NCLASS_META(HTTPClient, EventEmitter)
+    std::vector<JSCFunctionListEntry> HTTPClient::methods = {
+        JS_CFUNC_DEF("send", 0, HTTPClient::send),
+        JS_CFUNC_DEF("close", 0, HTTPClient::close),
+        JS_CFUNC_DEF("disconnect", 0, HTTPClient::close),
+        JS_CFUNC_DEF("isConnected", 0, HTTPClient::isConnected),
+        JS_CFUNC_DEF("enableChunkEvent", 0, HTTPClient::enableChunkEvent),
+        JS_CFUNC_DEF("setClientKey", 0, HTTPClient::setClientKey),
+        JS_CFUNC_DEF("enableClientAuth", 0, HTTPClient::enableClientAuth),
+        JS_CFUNC_DEF("disableClientAuth", 0, HTTPClient::disableClientAuth),
     } ;
 
-    Client::Client(JSContext * ctx, struct mg_connection * conn, JSValue callback)
+    HTTPClient::HTTPClient(JSContext * ctx, struct mg_connection * conn, JSValue callback)
         : EventEmitter(ctx,build(ctx))
         , callback(JS_DupValue(ctx,callback))
         , conn(conn)
@@ -28,13 +28,12 @@ namespace be::mg {
         if(conn) {
             conn->fn_data = this ;
         }
-
-        _isConnected = conn->is_listening ;
+        _isConnected = conn ? conn->is_listening : false ;
     }
     
-    HTTPClientHandler Client::handler = nullptr ;
+    HTTPClientHandler HTTPClient::handler = nullptr ;
 
-    Client::~Client(){
+    HTTPClient::~HTTPClient(){
         if(conn) {
             if( conn->fn_data == this ){
                 conn->fn_data = nullptr ;
@@ -44,20 +43,23 @@ namespace be::mg {
         callback = JS_NULL ;
     }
     
-    void Client::setConn(struct mg_connection * conn){
+    void HTTPClient::setConn(struct mg_connection * conn){
         this->conn = conn ;
     }
 
     /**
      * 发送数据
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
      * @method send
      * @param data:string 数据
      * @return bool
      */
-    JSValue Client::send(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    JSValue HTTPClient::send(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(1)
-        THIS_NCLASS(Client,client)
+        THIS_NCLASS(HTTPClient,client)
 
         bool res = false ;
 
@@ -95,11 +97,14 @@ namespace be::mg {
     /**
      * 关闭连接
      * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
      * @method close
      * @return undefined
      */
-    JSValue Client::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Client,client)
+    JSValue HTTPClient::close(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPClient,client)
         if(!client->conn) {
             JSTHROW("not connected")
         }
@@ -131,7 +136,7 @@ namespace be::mg {
     // MG_EV_WAKEUP,     // mg_wakeup() data received    struct mg_str *data
     // MG_EV_USER        // Starting ID for user events
     // };
-    void Client::eventHandler(struct mg_connection * conn, int ev, void * ev_data) {
+    void HTTPClient::eventHandler(struct mg_connection * conn, int ev, void * ev_data) {
         
         // if(ev!=MG_EV_POLL) {
         //     printf("Client::eventHandler() event: %d\n", ev) ;
@@ -140,7 +145,7 @@ namespace be::mg {
         if(!conn->fn_data) {
             return ;
         }
-        Client * client = (Client *)conn->fn_data ;
+        HTTPClient * client = (HTTPClient *)conn->fn_data ;
         
         if(handler && client && handler(client, conn, ev, ev_data, conn->fn_data)) {
             return ;
@@ -321,18 +326,64 @@ namespace be::mg {
         }
     }
 
-    JSValue Client::enableChunkEvent(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Client,client)
+    /**
+     * 启用分块传输事件
+     * 
+     * 启用后，客户端会触发 `http.head` 和 `http.chunk` 事件，用于处理大文件下载。
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
+     * @method enableChunkEvent
+     * @return undefined
+     */
+    JSValue HTTPClient::enableChunkEvent(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPClient,client)
         client->_enableChunkEvent = true ;
         return JS_UNDEFINED ;
     }
 
-    JSValue Client::isConnected(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Client,client)
+    /**
+     * 检查客户端是否已连接
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
+     * @method isConnected
+     * @return bool 已连接返回 true，否则返回 false
+     */
+    JSValue HTTPClient::isConnected(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPClient,client)
         return client->_isConnected? JS_TRUE: JS_FALSE ;
     }
 
-    JSValue Client::connect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    /**
+     * 创建一个 HTTP/WebSocket 客户端连接
+     * 
+     * 支持 `http://`, `https://`, `ws://`, `wss://` 协议。
+     * 
+     * 回调函数原型：
+     * ```typescript
+     * callback(event:string, request:[HTTPRequest](HTTPRequest.html)): void
+     * ```
+     * 
+     * 事件类型：
+     * - `connect`: 连接成功
+     * - `http.msg`: 收到 HTTP 响应
+     * - `http.head`: 收到 HTTP 头（启用分块传输时）
+     * - `http.chunk`: 收到数据块（启用分块传输时）
+     * - `close`: 连接关闭
+     * - `error`: 发生错误
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
+     * @method connect
+     * @param url:string 连接地址，例如 `"http://www.example.com/path"` 或 `"wss://ws.example.com"`
+     * @param callback:function 事件回调函数
+     * @return [HTTPClient](HTTPClient.html) 返回 HTTPClient 实例
+     */
+    JSValue HTTPClient::connect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
 
         ASSERT_ARGC(2)
         if( !JS_IsFunction(ctx, argv[1]) ) {
@@ -340,10 +391,10 @@ namespace be::mg {
         }
         ARGV_TO_CSTRING_LEN_E(0, url, urlLen, "arg url must be a string")
 
-        Client * client = new Client(ctx, nullptr, argv[1]) ;
+        HTTPClient * client = new HTTPClient(ctx, nullptr, argv[1]) ;
         struct mg_connection * conn = NULL ;
         if ( strncmp(url,"http://", 7)==0 || strncmp(url,"https://", 8)==0 ) {
-            conn = mg_http_connect(&Mg::mgr, url, Client::eventHandler, client) ;
+            conn = mg_http_connect(&Mg::mgr, url, HTTPClient::eventHandler, client) ;
             client->_isWS = false ;
 
             if(url[4]=='s') {
@@ -352,7 +403,7 @@ namespace be::mg {
         }
 
         else if( strncmp(url,"ws://", 5)==0 || strncmp(url,"wss://", 6)==0 ) {
-            conn = mg_ws_connect(&Mg::mgr, url, Client::wsEventHandler, client, NULL) ;
+            conn = mg_ws_connect(&Mg::mgr, url, HTTPClient::wsEventHandler, client, NULL) ;
             client->_isWS = true ;
             
             if(url[2]=='s') {
@@ -382,36 +433,67 @@ namespace be::mg {
         
         return JS_DupValue(ctx, client->jsobj) ;
     }
-    JSValue Client::setClientKey(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Client, that)
+    /**
+     * 设置客户端证书和私钥（用于双向 TLS 认证）
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
+     * @method setClientKey
+     * @param key:string 客户端私钥（PEM 格式）
+     * @param cert:string 客户端证书（PEM 格式）
+     * @return undefined
+     */
+    JSValue HTTPClient::setClientKey(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPClient, that)
         CHECK_ARGC(2)
         ARGV_TO_STRING(0, that->clientKey)
         ARGV_TO_STRING(1, that->clientCert)
         return JS_UNDEFINED ;
     }
-    JSValue Client::enableClientAuth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Client, that)
+    /**
+     * 启用双向 TLS 认证
+     * 
+     * 启用后，客户端会在 TLS 握手时发送证书。
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
+     * @method enableClientAuth
+     * @return undefined
+     */
+    JSValue HTTPClient::enableClientAuth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPClient, that)
         that->useClientCert = true ;
         return JS_UNDEFINED ;
     }
-    JSValue Client::disableClientAuth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-        THIS_NCLASS(Client, that)
+    /**
+     * 禁用双向 TLS 认证
+     * 
+     * @module mg
+     * @component beshell-mg
+     * @class HTTPClient
+     * @method disableClientAuth
+     * @return undefined
+     */
+    JSValue HTTPClient::disableClientAuth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+        THIS_NCLASS(HTTPClient, that)
         that->useClientCert = false ;
         return JS_UNDEFINED ;
     }
 
-    void Client::setHandler(HTTPClientHandler _handler) {
+    void HTTPClient::setHandler(HTTPClientHandler _handler) {
         handler = _handler ;
     }
 
     
-    bool Client::isTLS() const {
+    bool HTTPClient::isTLS() const {
         return _isTLS ;
     }
-    bool Client::isWS() const {
+    bool HTTPClient::isWS() const {
         return _isWS ;
     }
-    std::string Client::host() const {
+    std::string HTTPClient::host() const {
         return _host ;
     }
 }
