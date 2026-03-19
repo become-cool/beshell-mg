@@ -225,19 +225,17 @@ namespace be::mg {
      * 通常通过 [mg.connect()](../mg/#%E5%87%BD%E6%95%B0-connect) 调用，传入 `mqtt://` 或 `mqtts://` 协议的 URL。
      * 
      * 选项对象：
-     * ```typescript
-     * {
-     *     user: string,           // 用户名
-     *     pass: string,           // 密码
-     *     client_id: string,      // 客户端 ID
-     *     will_topic: string,     // 遗嘱主题
-     *     will_message: string,   // 遗嘱消息
-     *     will_retain: boolean,   // 遗嘱是否保留
-     *     clean: boolean=true,    // 是否清除会话
-     *     qos: number=0,          // QoS 等级 (0, 1, 2)
-     *     keepalive: number=0     // 保活时间（秒）
-     * }
-     * ```
+     *     {
+     *         user: string,           // 用户名
+     *         pass: string,           // 密码
+     *         client_id: string,      // 客户端 ID
+     *         will_topic: string,     // 遗嘱主题
+     *         will_message: string,   // 遗嘱消息
+     *         will_retain: boolean,   // 遗嘱是否保留
+     *         clean: boolean=true,    // 是否清除会话
+     *         qos: number=0,          // QoS 等级 (0, 1, 2)
+     *         keepalive: number=0     // 保活时间（秒）
+     *     }
      * 
      * @module mg
      * @component beshell-mg

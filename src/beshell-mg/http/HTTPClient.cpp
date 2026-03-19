@@ -363,9 +363,7 @@ namespace be::mg {
      * 支持 `http://`, `https://`, `ws://`, `wss://` 协议。
      * 
      * 回调函数原型：
-     * ```typescript
-     * callback(event:string, request:[HTTPRequest](HTTPRequest.html)): void
-     * ```
+     *     callback(event:string, request:[HTTPRequest](HTTPRequest.html)): void
      * 
      * 事件类型：
      * - `connect`: 连接成功

@@ -289,19 +289,15 @@ namespace be::mg {
      * 
      * 第一个参数也可以是一个对象：
      * 
-     * ```typescript
-     * {
-     *     addr: string ,
-     *     ssl: boolean ,
-     *     callback: (ev:string, req, rspn)=>void
-     * }
-     * ```
+     *     {
+     *         addr: string ,
+     *         ssl: boolean ,
+     *         callback: (ev:string, req, rspn)=>void
+     *     }
      * 
      * 回调函数的原型：
      * 
-     * ```typescript
-     * callback(event:string, request:[HTTPRequest](HTTPRequest.html), response:[HTTPResponse](HTTPResponse.html)): void
-     * ```
+     *     callback(event:string, request:[HTTPRequest](HTTPRequest.html), response:[HTTPResponse](HTTPResponse.html)): void
      * 
      * 其中 event 参数参考：[mg 事件](#%E4%BA%8B%E4%BB%B6)
      * 
@@ -322,9 +318,7 @@ namespace be::mg {
      * 
      * 回调函数的原型:
      * 
-     * ```typescript
-     * callback(event:string, request:[HTTPRequest](HTTPRequest.html)): void
-     * ```
+     *     callback(event:string, request:[HTTPRequest](HTTPRequest.html)): void
      * 
      * 其中 event 参数参考：[mg 事件](#%E4%BA%8B%E4%BB%B6)
      *
@@ -516,21 +510,18 @@ namespace be::mg {
     }
 
     /**
-     * 解析 URL 字符串，返回对象：
-     * 
-     * ```typescript
-     * {
-     *     host: string ,
-     *     port: number ,
-     *     uri: string
-     * }
-     * ```
+     * 解析 URL 字符串
      * 
      * @module mg
      * @component beshell-mg
      * @function parseUrl
      * @param url:string 要解析的 URL 字符串
-     * @return object
+     * @return object 解析后的 URL 对象
+     *     {
+     *         host: string,   // 主机名
+     *         port: number,   // 端口号
+     *         uri: string     // URI 路径
+     *     }
      */
     JSValue Mg::parseUrl(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         ASSERT_ARGC(1)

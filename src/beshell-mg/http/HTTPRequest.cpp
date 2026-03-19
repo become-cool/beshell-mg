@@ -131,7 +131,10 @@ namespace be::mg {
      * @component beshell-mg
      * @class HTTPRequest
      * @method allHeaders
-     * @return object
+     * @return object 包含所有请求头的对象，键为 header 名，值为 header 值
+     *     {
+     *         [key: string]: string
+     *     }
      */
     JSValue HTTPRequest::all_headers(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
         THIS_NCLASS(HTTPRequest,req)

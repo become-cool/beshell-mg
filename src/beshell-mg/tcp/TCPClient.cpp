@@ -129,9 +129,7 @@ namespace be::mg {
      * 通常通过 [mg.connect()](../mg/#%E5%87%BD%E6%95%B0-connect) 调用，传入 `tcp://` 协议的 URL。
      * 
      * 回调函数原型：
-     * ```typescript
-     * callback(event:string, data:ArrayBuffer): void
-     * ```
+     *     callback(event:string, data:ArrayBuffer): void
      * 
      * 事件类型：
      * - `open`: 连接已打开
