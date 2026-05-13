@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 
 # 源码目录
 file(GLOB_RECURSE src_beshell_mg
-        src/beshell-mg/*.c
-        src/beshell-mg/*.cpp
+        src/beshell/mg/*.c
+        src/beshell/mg/*.cpp
     )
 
 # mongoose
