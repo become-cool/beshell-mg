@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 
 # 源码目录
-file(GLOB_RECURSE src_beshell_mg
+file(GLOB_RECURSE src_beshell_component
         src/beshell/mg/*.c
         src/beshell/mg/*.cpp
     )
@@ -14,7 +14,7 @@ file(GLOB_RECURSE src_mg  dep/*.c)
 idf_component_register(
         SRCS
             ${src_mg}
-            ${src_beshell_mg}
+            ${src_beshell_component}
         INCLUDE_DIRS 
             ./src
         PRIV_REQUIRES
@@ -23,7 +23,7 @@ idf_component_register(
             beshell
 )
 
-target_include_directories(${COMPONENT_LIB} PRIVATE src/beshell-mg dep) 
+target_include_directories(${COMPONENT_LIB} PRIVATE src/beshell/mg dep) 
 
 # # for mongoose tls/ssl
 add_definitions(-DMG_ENABLE_MBEDTLS)
